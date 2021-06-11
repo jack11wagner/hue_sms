@@ -5,6 +5,7 @@ from name_converter import clean_name
 from data_writer import writeFile,colorPercent,mostRecentColors,numOfEachColor,invalidColors,firstEntryDate
 import random
 import logging
+import redis
 
 logging.basicConfig(level=logging.INFO,filename="hue_log.log",
                     format="%(asctime)s:%(levelname)s:%(message)s"	)
@@ -15,6 +16,7 @@ file = "data.csv"
 
 @app.route('/', methods=['POST', 'GET'])
 def set_color():
+    database = redis.Redis(host='localhost', port=6379, db=0)
     phone_number = request.values.get('From', None)
     color_name = request.values.get('Body', None)
     color_name = clean_name(color_name)
@@ -34,8 +36,8 @@ def set_color():
     if color_name == "colors list":
         response = MessagingResponse()
         response.message(
-                "List of color choices:" + "https://en.wikipedia.org/wiki/List_of_Crayola_crayon_colors"
-                )
+            "List of color choices:" + "https://en.wikipedia.org/wiki/List_of_Crayola_crayon_colors"
+        )
         return str(response)
 
     if color_name == "random":
@@ -51,9 +53,19 @@ def set_color():
             i += 1
         response = MessagingResponse()
         response.message("You chose a random color.  The choice was " + color_name)
+        database.hincrby('color_totals', 'random', 1)
+        database.incr('total', 1)
+    else:
+        database.hincrby('color_totals', color_name, 1)
+        database.incr('total', 1)
 
-    message = controller.set_color(color_name)
-    percent = colorPercent(file, color_name)
+
+
+
+    print('here')
+    message = controller.set_color(color_name.lower())
+    percent = colorPercent(color_name)
+
     date = firstEntryDate(file)
     response = MessagingResponse()
     response.message(message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
