@@ -58,9 +58,6 @@ class HueController:
         else:
             saturation_val = 255
             correction_value = 1.3
-            # r = ((r / 255) ** (1 / correction_value))
-            # g = ((g / 255) ** (1 / correction_value))
-            # b = ((b / 255) ** (1 / correction_value))
             [x, y] = converter.rgb_to_xy(r, g, b)
         try:
             self.light.xy = (x, y)
