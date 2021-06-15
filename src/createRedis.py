@@ -20,6 +20,9 @@ def go():
             inputVal = str(red + "," + green + "," + blue)
 
             r.hset("colors", name, inputVal)
+            r.hset("color_totals", name, 0)
+    r.hset("color_totals", 'random', 0)
+    r.set('total', 0)
 
 
 if __name__ == '__main__':

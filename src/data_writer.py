@@ -2,6 +2,7 @@ import datetime
 import csv
 from collections import deque
 from getRedisColor import getColor
+import redis
 
 now = datetime.datetime.now()
 #Writes the time, phone number, color, and response to a specified CSV file for data storage
@@ -52,20 +53,20 @@ def invalidColors(file):
 
     except FileNotFoundError:
         return invalidList
-def colorPercent(file,color):
-    try:
-        colors = numOfEachColor(file)
-        totalCalls = sum(colors.values())
-        if totalCalls == 0:
-            totalCalls = 1;
-        if(colors.get(color) != None):
-            percent = colors.get(color) / totalCalls * 100
-        else:
-            percent = 1/totalCalls*100
-        return percent
-    except FileNotFoundError:
-        return 0
-def firstEntryDate(file):
+
+
+def color_percent(color):
+    r = redis.Redis(host='localhost', port=6379, db=0)
+    color = color.lower()
+
+    color_total = (float(r.hget('color_totals', color).decode('utf-8')))
+    total = float(r.get('total').decode('utf-8'))
+
+    percent = (color_total/total) * 100
+
+    return percent
+
+def first_entry_date(file):
     try:
         with open(file,'r') as data:
             data_reader = csv.reader(data)

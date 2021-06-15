@@ -1,7 +1,7 @@
 from phue import Bridge
 from scrape_colors import make_map
 from rgbxy import Converter
-import nameConverter
+import name_converter
 
 
 def go():
@@ -10,15 +10,15 @@ def go():
     #Test Comment in demo2 file
     test = "."
 
-    b = Bridge('10.76.100.161')
+    b = Bridge('172.31.229.35')
 
     b.connect()
 
-    entry = b.lights[1]
+    entry = b.lights[0]
 
     while (test != ""):
         test = input("Please enter a color: ")
-        test = nameConverter.convert(test)
+        test = name_converter.NameConverter.convert(name_converter.NameConverter, test)
         print(test)
         if test == "Black":
             entry.on = False

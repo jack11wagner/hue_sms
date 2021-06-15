@@ -10,7 +10,8 @@ logging.basicConfig(level=logging.INFO,filename="hue_log.log",
 
 saturation_val = 0
 branch_value = 0
-IP_address = '10.76.100.161'
+# IP_address = '10.76.100.161'
+IP_address = '172.31.229.35'
 
 
 class HueController:
@@ -27,9 +28,9 @@ class HueController:
         self.bridge = Bridge(IP_address)
         self.bridge.connect()
         logging.info("Server was successfully able to connect to the bridge")
-        self.light = self.bridge.lights[1]
+        self.light = self.bridge.lights[0]
 
-    def set_color(self, color_name):
+    def set_color(self, color_name, is_random):
         try:
             self.connect()
         except PhueException:
@@ -57,15 +58,16 @@ class HueController:
         else:
             saturation_val = 255
             correction_value = 1.3
-            r = ((r / 255) ** (1 / correction_value))
-            g = ((g / 255) ** (1 / correction_value))
-            b = ((b / 255) ** (1 / correction_value))
             [x, y] = converter.rgb_to_xy(r, g, b)
         try:
             self.light.xy = (x, y)
             self.light.saturation = saturation_val
             logging.info("The light was changed to the color " + color_name)
-            return "The light was changed to the color \"{}\"."\
+            if is_random:
+                return "The light was changed to the color \"{}\". Random was used." \
+                    .format(clean_name(color_name))
+            else:
+                return "The light was changed to the color \"{}\"."\
                 .format(clean_name(color_name))
         except PhueException:
             logging.info("Server unable to connect to the Hue Light")
