@@ -2,7 +2,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request
 from hue_controller import HueController
 from name_converter import clean_name
-from data_writer import writeFile,colorPercent,mostRecentColors,numOfEachColor,invalidColors,firstEntryDate
+from data_writer import writeFile,color_percent,mostRecentColors,numOfEachColor,invalidColors,first_entry_date
 import random
 import logging
 import redis
@@ -16,6 +16,7 @@ file = "data.csv"
 
 @app.route('/', methods=['POST', 'GET'])
 def set_color():
+    is_random = False
     database = redis.Redis(host='localhost', port=6379, db=0)
     phone_number = request.values.get('From', None)
     color_name = request.values.get('Body', None)
@@ -41,6 +42,7 @@ def set_color():
         return str(response)
 
     if color_name == "random":
+        is_random = True
         colors_file = open("colors.csv")
         randomint = random.randint(1, 162)
         i = 0
@@ -59,14 +61,12 @@ def set_color():
         database.hincrby('color_totals', color_name, 1)
         database.incr('total', 1)
 
+    message = controller.set_color(color_name.lower(), is_random)
+    if is_random:
+        color_name = 'random'
+    percent = color_percent(color_name)
 
-
-
-    print('here')
-    message = controller.set_color(color_name.lower())
-    percent = colorPercent(color_name)
-
-    date = firstEntryDate(file)
+    date = first_entry_date(file)
     response = MessagingResponse()
     response.message(message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
     logging.info("Color " + color_name + " has been set by the phone number " + phone_number + ".")

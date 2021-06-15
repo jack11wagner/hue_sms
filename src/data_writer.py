@@ -59,7 +59,7 @@ def color_percent(color):
     r = redis.Redis(host='localhost', port=6379, db=0)
     color = color.lower()
 
-    color_total = (float(r.hget('color_totals', color).decode('utf-8'))) + 1 #The addition is to make sure the output for the first random is not 0%
+    color_total = (float(r.hget('color_totals', color).decode('utf-8')))
     total = float(r.get('total').decode('utf-8'))
 
     percent = (color_total/total) * 100
