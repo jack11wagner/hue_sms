@@ -6,3 +6,9 @@ eggs/
 .pytest_cache
 
 .env/
+*.log
+.idea
+dump.rdb
+venv
+.venv
+*.csv
