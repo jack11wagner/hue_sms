@@ -18,6 +18,7 @@ file = "data.csv"
 def set_color():
     is_random = False
     database = redis.Redis(host='localhost', port=6379, db=0)
+    list_of_colors = list(database.hgetall('color_totals').keys())
     phone_number = request.values.get('From', None)
     color_name = request.values.get('Body', None)
     color_name = clean_name(color_name)
@@ -41,25 +42,22 @@ def set_color():
         )
         return str(response)
 
+
     if color_name == "random":
         is_random = True
-        colors_file = open("colors.csv")
-        randomint = random.randint(1, 162)
-        i = 0
-        for line in colors_file:
-            line = line.strip()
-            name, r, g, b = line.split(',')
-            placeholder = name
-            if i == randomint:
-                color_name = placeholder
-            i += 1
+        color_sum = int(database.get('color_sum').decode('utf-8'), base=10)
+        random_int = random.randint(1, color_sum)
+        color_name = list_of_colors[random_int].decode('utf-8')
+
         response = MessagingResponse()
         response.message("You chose a random color.  The choice was " + color_name)
+
         database.hincrby('color_totals', 'random', 1)
         database.incr('total', 1)
     else:
-        database.hincrby('color_totals', color_name, 1)
-        database.incr('total', 1)
+        if color_name in list_of_colors:
+            database.hincrby('color_totals', color_name, 1)
+            database.incr('total', 1)
 
     message = controller.set_color(color_name.lower(), is_random)
     if is_random:

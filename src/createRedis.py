@@ -17,10 +17,11 @@ def go():
             (name, red, green, blue) = line.split(',')
 
             name = clean_name(name)
-            inputVal = str(red + "," + green + "," + blue)
+            input_val = str(red + "," + green + "," + blue)
 
-            r.hset("colors", name, inputVal)
+            r.hset("colors", name, input_val)
             r.hset("color_totals", name, 0)
+            r.incr('color_sum')
     r.hset("color_totals", 'random', 0)
     r.set('total', 0)
 
