@@ -28,7 +28,7 @@ def setup():
         value = rediscolor_RGB_dict[key].decode('utf-8')
         red, green, blue = value.split(',')
         key = key.decode('utf-8')
-        colorsRGBdict[key] = px.colors.label_rgb((int(red), int(green), int(blue)))
+        colorsRGBdict[key.title()] = px.colors.label_rgb((int(red), int(green), int(blue)))
 
     labels = []
     sizes = []
@@ -36,9 +36,9 @@ def setup():
 
     for key in color_totals_dict:
         if (color_totals_dict[key] > 0):
-            labels.append(key)
+            labels.append(key.title())
             sizes.append(color_totals_dict[key])
-            colors.append(key)
+            colors.append(key.title())
     fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=colorsRGBdict, width=1200, height=600)
 
     app.layout = html.Div(children=[
@@ -84,7 +84,7 @@ def update_graph_live(n):
         value = rediscolor_RGB_dict[key].decode('utf-8')
         red, green, blue = value.split(',')
         key = key.decode('utf-8')
-        colorsRGBdict[key] = px.colors.label_rgb((int(red), int(green), int(blue)))
+        colorsRGBdict[key.title()] = px.colors.label_rgb((int(red), int(green), int(blue)))
 
     labels = []
     sizes = []
@@ -92,9 +92,9 @@ def update_graph_live(n):
 
     for key in color_totals_dict:
         if (color_totals_dict[key] > 0):
-            labels.append(key)
+            labels.append(key.title())
             sizes.append(color_totals_dict[key])
-            colors.append(key)
+            colors.append(key.title())
     fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=colorsRGBdict)
 
     return fig
