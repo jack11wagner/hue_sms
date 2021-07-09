@@ -22,6 +22,7 @@ folder (`hue_sms` unless it was renamed after cloning).
 1. **Create a virtual environment in the folder `.env`**:  run `python3 -m venv .env`
 2. **Activate the virtual environment**: `source .env/bin/activiate`
 3. **Install dependencies**: `pip install -r requirements.txt`
+4. **Make config file**: add a file to the root directory called settings.toml.  Add variables of light_ip= and light_number=
 4. **Install `hue_sms` source as an editable module**: `pip install -e .
 
 ## Workflow - IDE

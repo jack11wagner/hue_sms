@@ -2,6 +2,7 @@ from phue import Bridge, PhueException
 import name_converter
 from rgbxy import Converter
 from name_converter import clean_name
+from dynaconf import settings
 import logging
 from getRedisColor import getColor
 
@@ -10,8 +11,8 @@ logging.basicConfig(level=logging.INFO,filename="hue_log.log",
 
 saturation_val = 0
 branch_value = 0
-# IP_address = '10.76.100.161'
-IP_address = '172.31.229.35'
+IP_address = settings.light_ip
+light_number = settings.light_number
 
 
 class HueController:
@@ -28,7 +29,7 @@ class HueController:
         self.bridge = Bridge(IP_address)
         self.bridge.connect()
         logging.info("Server was successfully able to connect to the bridge")
-        self.light = self.bridge.lights[0]
+        self.light = self.bridge.lights[light_number]
 
     def set_color(self, color_name, is_random):
         try:
