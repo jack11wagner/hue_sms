@@ -11,6 +11,8 @@ def go():
     location = os.path.realpath(
         os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
+    r.flushdb()
+
     with open(location + '/colors.csv') as colors:
         for line in colors:
             line = line.strip()
