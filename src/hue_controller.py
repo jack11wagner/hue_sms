@@ -2,12 +2,14 @@ from phue import Bridge, PhueException
 import name_converter
 from rgbxy import Converter
 from name_converter import clean_name
-from dynaconf import settings
+from dynaconf import Dynaconf
 import logging
 from getRedisColor import getColor
 
 logging.basicConfig(level=logging.INFO,filename="hue_log.log",
                     format="%(asctime)s:%(levelname)s:%(message)s"	)
+
+settings = Dynaconf(settings_files=['settings.toml'])
 
 saturation_val = 0
 branch_value = 0
