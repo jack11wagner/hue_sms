@@ -18,7 +18,10 @@ file = "data.csv"
 def set_color():
     is_random = False
     database = redis.Redis(host='localhost', port=6379, db=0)
-    list_of_colors = list(database.hgetall('color_totals').keys())
+    list_of_colors = []
+    for color in database.hgetall('color_totals').keys():
+        color = color.decode('utf-8')
+        list_of_colors.append(color)
     phone_number = request.values.get('From', None)
     color_name = request.values.get('Body', None)
     color_name = clean_name(color_name)
@@ -45,9 +48,9 @@ def set_color():
 
     if color_name == "random":
         is_random = True
-        color_sum = int(database.get('color_sum').decode('utf-8'), base=10)
+        color_sum = 160 #int(database.get('color_sum').decode('utf-8'), base=10)
         random_int = random.randint(1, color_sum)
-        color_name = list_of_colors[random_int].decode('utf-8')
+        color_name = list_of_colors[random_int]
 
         response = MessagingResponse()
         response.message("You chose a random color.  The choice was " + color_name)
@@ -62,13 +65,14 @@ def set_color():
     message = controller.set_color(color_name.lower(), is_random)
     if is_random:
         color_name = 'random'
-    percent = color_percent(color_name)
 
+    percent = color_percent(color_name)
+    writeFile(file, str(phone_number), str(color_name), str(message))
     date = first_entry_date(file)
     response = MessagingResponse()
     response.message(message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
     logging.info("Color " + color_name + " has been set by the phone number " + phone_number + ".")
-    writeFile(file, str(phone_number), str(color_name), str(message))
+
 
     return str(response)
 
