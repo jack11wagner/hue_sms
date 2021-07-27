@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO,filename="hue_log.log",
 
 saturation_val = 0
 branch_value = 0
-# IP_address = '10.76.100.161'
+# IP_address = '192.168.4.64'
 IP_address = '172.31.229.35'
 
 
