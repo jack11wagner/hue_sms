@@ -6,3 +6,8 @@ twilio
 redis
 fakeredis
 -e git://github.com/benknight/hue-python-rgb-converter#egg=rgbxy
+plotly
+dash
+dash_core_components
+dash_html_components
+Dynaconf
