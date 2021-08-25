@@ -76,8 +76,9 @@ def set_color():
 
     if rgb_values is None:
         logging.info("Color " + color_name + " was not recognized")
-        message = "I'm sorry, but I don't recognize " \
-               "the color \"{}\".".format(color_name)
+        response = MessagingResponse()
+        response.message("I'm sorry, but I don't recognize the color \"{}\".".format(color_name))
+        return str(response)
 
     (r, g, b) = rgb_values.decode("utf-8").split(',')
     r = int(r)
