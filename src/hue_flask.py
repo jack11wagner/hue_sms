@@ -22,10 +22,12 @@ file = "data.csv"
 def set_color():
     is_random = False
     database = redis.Redis(host='localhost', port=6379, db=0)
+
     list_of_colors = []
     for color in database.hgetall('color_totals').keys():
         color = color.decode('utf-8')
         list_of_colors.append(color)
+
     phone_number = request.values.get('From', None)
     color_name = request.values.get('Body', None)
     color_name = clean_name(color_name)
@@ -49,6 +51,13 @@ def set_color():
         )
         return str(response)
 
+    try:
+        controller.connect()
+    except PhueException:
+        logging.info("Server unable to connect to the Hue Light")
+        response = MessagingResponse()
+        response.message("Server unable to connect to the Hue Light")
+        return str(response)
 
     if color_name == "random":
         is_random = True
@@ -65,13 +74,6 @@ def set_color():
         if color_name in list_of_colors:
             database.hincrby('color_totals', color_name, 1)
             database.incr('total', 1)
-
-    try:
-        controller.connect()
-    except PhueException:
-        logging.info("Server unable to connect to the Hue Light")
-        message = "I'm sorry, but I cannot connect to the Hue Light." \
-               "Please try again later."
 
     rgb_values = getColor(color_name)
 
