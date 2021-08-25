@@ -18,6 +18,24 @@ app = Flask(__name__)
 controller = HueController()
 file = "data.csv"
 
+
+def convert(rgb_values):
+    (r, g, b) = rgb_values.decode("utf-8").split(',')
+    r = int(r)
+    g = int(g)
+    b = int(b)
+
+    converter = Converter()
+    print(r, " ", g, " ", b)
+    if r == 255 and b == 255 and g == 255:
+        saturation_val = 0
+        [x, y] = converter.rgb_to_xy(r, g, b)
+    else:
+        saturation_val = 255
+        [x, y] = converter.rgb_to_xy(r, g, b)
+
+    return x, y, saturation_val
+
 @app.route('/', methods=['POST', 'GET'])
 def set_color():
     is_random = False
@@ -80,20 +98,8 @@ def set_color():
         response.message("I'm sorry, but I don't recognize the color \"{}\".".format(color_name))
         return str(response)
 
-    (r, g, b) = rgb_values.decode("utf-8").split(',')
-    r = int(r)
-    g = int(g)
-    b = int(b)
+    [x, y, saturation_val] = convert(rgb_values)
 
-    converter = Converter()
-    print(r, " ", g, " ", b)
-    if r == 255 and b == 255 and g == 255:
-        saturation_val = 0
-        [x, y] = converter.rgb_to_xy(r, g, b)
-    else:
-        saturation_val = 255
-        correction_value = 1.3
-        [x, y] = converter.rgb_to_xy(r, g, b)
     try:
         controller.light.xy = (x, y)
         controller.light.saturation = saturation_val
