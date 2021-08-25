@@ -61,12 +61,9 @@ def set_color():
 
     if color_name == "random":
         is_random = True
-        color_sum = 160 #int(database.get('color_sum').decode('utf-8'), base=10)
+        color_sum = int(database.get('color_sum').decode('utf-8'), base=10)
         random_int = random.randint(1, color_sum)
         color_name = list_of_colors[random_int]
-
-        response = MessagingResponse()
-        response.message("You chose a random color.  The choice was " + color_name)
 
         database.hincrby('color_totals', 'random', 1)
         database.incr('total', 1)
