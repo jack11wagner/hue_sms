@@ -12,3 +12,4 @@ dump.rdb
 venv
 .venv
 *.csv
+settings.toml
