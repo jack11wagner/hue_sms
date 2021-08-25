@@ -112,8 +112,10 @@ def set_color():
                 .format(clean_name(color_name))
     except PhueException:
         logging.info("Server unable to connect to the Hue Light")
-        message = "I'm sorry, but I cannot connect to the Hue Light." \
-               "Please try again later."
+        response = MessagingResponse()
+        response.message("I'm sorry, but I cannot connect to the Hue Light. Please try again later.")
+        return str(response)
+
     if is_random:
         color_name = 'random'
 
@@ -123,7 +125,6 @@ def set_color():
     response = MessagingResponse()
     response.message(message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
     logging.info("Color " + color_name + " has been set by the phone number " + phone_number + ".")
-
 
     return str(response)
 
