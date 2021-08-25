@@ -1,5 +1,9 @@
+from phue import PhueException
+from rgbxy import Converter
 from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request
+
+from getRedisColor import getColor
 from hue_controller import HueController
 from name_converter import clean_name
 from data_writer import writeFile,color_percent,mostRecentColors,numOfEachColor,invalidColors,first_entry_date
@@ -62,7 +66,48 @@ def set_color():
             database.hincrby('color_totals', color_name, 1)
             database.incr('total', 1)
 
-    message = controller.set_color(color_name.lower(), is_random)
+    try:
+        controller.connect()
+    except PhueException:
+        logging.info("Server unable to connect to the Hue Light")
+        message = "I'm sorry, but I cannot connect to the Hue Light." \
+               "Please try again later."
+
+    rgb_values = getColor(color_name)
+
+    if rgb_values is None:
+        logging.info("Color " + color_name + " was not recognized")
+        message = "I'm sorry, but I don't recognize " \
+               "the color \"{}\".".format(color_name)
+
+    (r, g, b) = rgb_values.decode("utf-8").split(',')
+    r = int(r)
+    g = int(g)
+    b = int(b)
+
+    converter = Converter()
+    print(r, " ", g, " ", b)
+    if r == 255 and b == 255 and g == 255:
+        saturation_val = 0
+        [x, y] = converter.rgb_to_xy(r, g, b)
+    else:
+        saturation_val = 255
+        correction_value = 1.3
+        [x, y] = converter.rgb_to_xy(r, g, b)
+    try:
+        controller.light.xy = (x, y)
+        controller.light.saturation = saturation_val
+        logging.info("The light was changed to the color " + color_name)
+        if is_random:
+            message = "The light was changed to the color \"{}\". Random was used." \
+                .format(clean_name(color_name))
+        else:
+            message = "The light was changed to the color \"{}\"." \
+                .format(clean_name(color_name))
+    except PhueException:
+        logging.info("Server unable to connect to the Hue Light")
+        message = "I'm sorry, but I cannot connect to the Hue Light." \
+               "Please try again later."
     if is_random:
         color_name = 'random'
 
