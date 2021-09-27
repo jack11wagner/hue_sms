@@ -4,7 +4,9 @@ import dash_html_components as html
 import plotly.express as px
 import redis
 from dash.dependencies import Input, Output
+import pandas as pd
 from datetime import datetime
+import plotly.graph_objects as go
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -14,29 +16,26 @@ r = redis.Redis(
     host='localhost', port=6379, db=0)
 
 
-# function gets the most recent SMS message to the HueLight
+def get_responsesDict(filename):
+    responsesDict = {'Time': [], 'Last 4 Digits': [], 'Color': []}
+    # gets last 10 messages from data.csv
+    with open(filename) as file:
+        file_contents = file.readlines()
+        last_10SMS = file_contents[-10:]
+        last_10SMS = [message.strip() for message in last_10SMS]
+        last_10SMS.reverse()
 
-def get_last_response(filename):
-    with open(filename) as infile:
-        file_contents = infile.readlines()
-        last_SMS = file_contents[-1:]
-        last_SMS = [message.strip() for message in last_SMS]
-        return last_SMS
+        for message in last_10SMS:
+            message = message.split(',')
+            message = [component.strip('"') for component in message]
+            time, phone_number, color_choice = message[0], message[1], message[2]
+            date, hr_of_day = time[:11], datetime.strptime(time[11:16], "%H:%M")
 
+            responsesDict['Time'].append('' + date + hr_of_day.strftime("%I:%M %p"))
+            responsesDict['Last 4 Digits'].append('###-###-' + phone_number[-4:])
+            responsesDict['Color'].append(color_choice.title())
 
-def create_response_log(message_list):
-    response_String = ""
-    for message in message_list:
-        message_components = message.split(',')
-        message_components = [component.strip('"') for component in message_components]
-        time, phone_number, color_choice = message_components[0], message_components[1], message_components[2]
-
-        date, hr_of_day = time[:11], datetime.strptime(time[11:16], "%H:%M")
-
-        response_String += "Phone number ending in (" + phone_number[-4:] + ") at " + hr_of_day.strftime(
-            "%I:%M %p") + " on " + date \
-                           + "chose the color " + color_choice.title() + '.'
-    return response_String
+    return responsesDict
 
 
 def decode_redis(filename):
@@ -70,29 +69,64 @@ def setup():
             colors.append(key.title())
     fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=color_RGB_dict, width=1200, height=600)
 
-    app.layout = html.Div(children=[
-        html.H1(children='Moravian Color Choices'),
+    df = pd.DataFrame(get_responsesDict('data.csv'))
 
-        html.Div(children='''
-        Text a color to the number 857-320-3440 and the light will change
-        ''', style={'color': 'black', 'fontSize': 22}
-                 ),
-        html.Div(children='''* Text 'options' for all hue light functions
-        ''', style={'color': 'black', 'fontSize': 18}),
-        html.Div(children='''* Text 'colors list' for all crayola colors
-        ''', style={'color': 'black', 'fontSize': 18}),
-        html.Div(children='''* Text 'random' for random color
-        ''', style={'color': 'black', 'fontSize': 18}),
-        dcc.Graph(
-            id='colors-graph',
-            figure=fig
+    layout = go.Layout(
+        autosize=True,
+        width=1000,
+        height=1000,
+    )
+
+    table = go.Figure(data=[go.Table(
+        header=dict(
+            values=["Time", "Last 4 Digits", "Color"],
+            align='left'
         ),
-        dcc.Interval(
-            id='interval-component',
-            interval=1 * 1000,
-            n_intervals=0
-        )
-    ])
+        cells=dict(
+            values=[df.Time, df['Last 4 Digits'], df.Color]
+
+        ))
+    ], layout=layout)
+
+    app.layout = html.Div(children=[
+        html.Div([
+            html.Div([html.H1(children='Moravian Color Choices'),
+
+                      html.Div(children='''
+            Text a color to the number 857-320-3440 and the light will change
+            ''', style={'color': 'black', 'fontSize': 22}
+                               ),
+                      html.Div(children='''* Text 'options' for all hue light functions
+            ''', style={'color': 'black', 'fontSize': 18}),
+                      html.Div(children='''* Text 'colors list' for all crayola colors
+            ''', style={'color': 'black', 'fontSize': 18}),
+                      html.Div(children='''* Text 'random' for random color
+            ''', style={'color': 'black', 'fontSize': 18}),
+                      dcc.Graph(
+                          id='colors-graph',
+                          figure=fig
+                      ),
+                      dcc.Interval(
+                          id='interval-component',
+                          interval=1 * 1000,
+                          n_intervals=0
+                      )
+                      ], className='seven columns'),
+
+            html.Div(children=[
+
+                dcc.Graph(
+                    id='SMS-responses',
+                    figure=table),
+                dcc.Interval(
+                    id='table-interval',
+                    interval=1 * 1000,
+                    n_intervals=0
+                )
+            ], className='five columns'
+            )
+        ], className='row')])
+
 
 @app.callback(Output('colors-graph', 'figure'),
               Input('interval-component', 'n_intervals'))
@@ -109,7 +143,6 @@ def update_graph_live(n):
         color_RGB_dict[color.title()] = px.colors.label_rgb((int(red), int(green), int(blue)))
 
     labels, sizes, colors = [], [], []
-    lasttext = get_last_response('data.csv')
 
     for key in color_totals_dict:
         if (color_totals_dict[key] > 0):
@@ -117,17 +150,42 @@ def update_graph_live(n):
             sizes.append(color_totals_dict[key])
             colors.append(key.title())
     fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=color_RGB_dict)
-    fig.add_layout_image(
+
+    # change Font Size for PieChart/Legend
+    fig.update_layout(font=dict(size=15))
+
+    return fig
+
+
+@app.callback(Output('SMS-responses', 'figure'),
+              Input('table-interval', 'n_intervals'))
+def update_table_live(n):
+    df = pd.DataFrame(get_responsesDict('data.csv'))
+    table = go.Figure(data=[go.Table(
+        header=dict(
+            values=["Time", "Last 4 Digits", "Color"],
+            align='center'
+        ),
+        cells=dict(
+            values=[df.Time, df['Last 4 Digits'], df.Color],
+            # change column cell height 30 for Monitors, default for Computer
+            height = 30
+
+        ))
+    ])
+    table.update_layout(title='Recent Color Choices', title_x =.5, title_y=.93,font=dict(
+        # change Font size for Table
+        size=15,
+    ) )
+    table.add_layout_image(
         dict(
-            source="https://pbs.twimg.com/profile_images/378800000380798285/cf6859df8898d144956a983dafaa5694.jpeg",
-            x=.17, y=0,
-            sizex=0.4, sizey=0.4,
+            source="https://www.moravian.edu/themes/modern/dist/images/logo.svg",
+            x=.75, y=0.3,
+            sizex=0.5, sizey=0.35,
             xanchor="right", yanchor="bottom"
         )
     )
-    fig.update_layout(title = "Recent color choice: " + create_response_log(lasttext))
-
-    return fig
+    return table
 
 
 if __name__ == '__main__':
