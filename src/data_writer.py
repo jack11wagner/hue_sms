@@ -4,8 +4,8 @@ from collections import deque
 from getRedisColor import getColor
 import redis
 
-now = datetime.datetime.now()
-#Writes the time, phone number, color, and response to a specified CSV file for data storage
+
+# Writes the time, phone number, color, and response to a specified CSV file for data storage
 def writeFile(file,number,color,response):
     with open(file, mode='a') as data:
         now = datetime.datetime.now()
