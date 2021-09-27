@@ -13,3 +13,4 @@ venv
 .venv
 *.csv
 settings.toml
+.DS_Store
