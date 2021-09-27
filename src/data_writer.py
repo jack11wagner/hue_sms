@@ -8,6 +8,7 @@ now = datetime.datetime.now()
 #Writes the time, phone number, color, and response to a specified CSV file for data storage
 def writeFile(file,number,color,response):
     with open(file, mode='a') as data:
+        now = datetime.datetime.now()
         data_writer = csv.writer(data, quoting=csv.QUOTE_ALL)
         data_writer.writerow([now, number,color,response])
         data.close()
