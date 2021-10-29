@@ -72,9 +72,9 @@ def setup():
     df = pd.DataFrame(get_responsesDict('data.csv'))
 
     layout = go.Layout(
-        autosize=True,
-        width=1000,
-        height=1000,
+        autosize=False,
+        width=1100,
+        height=1100,
     )
 
     table = go.Figure(data=[go.Table(
@@ -83,25 +83,25 @@ def setup():
             align='left'
         ),
         cells=dict(
-            values=[df.Time, df['Last 4 Digits'], df.Color]
+            values=[df['Time'], df['Last 4 Digits'], df['Color']]
 
         ))
     ], layout=layout)
 
     app.layout = html.Div(children=[
         html.Div([
-            html.Div([html.H1(children='Moravian Color Choices'),
+            html.Div([html.H1(children='Moravian Color Choices', style = {'fontSize': 64}),
 
                       html.Div(children='''
-            Text a color to the number 857-320-3440 and the light will change
+            Text a color to the number 484-895-1386 and the light will change
             ''', style={'color': 'black', 'fontSize': 22}
                                ),
                       html.Div(children='''* Text 'options' for all hue light functions
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       html.Div(children='''* Text 'colors list' for all crayola colors
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       html.Div(children='''* Text 'random' for random color
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       dcc.Graph(
                           id='colors-graph',
                           figure=fig
