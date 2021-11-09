@@ -10,6 +10,7 @@ from data_writer import writeFile,color_percent,mostRecentColors,numOfEachColor,
 import random
 import logging
 import redis
+from fuzzyColors import getFuzzyColor
 
 logging.basicConfig(level=logging.INFO,filename="hue_log.log",
                     format="%(asctime)s:%(levelname)s:%(message)s"	)
@@ -36,9 +37,11 @@ def convert(rgb_values):
 
     return x, y, saturation_val
 
+
 @app.route('/', methods=['POST', 'GET'])
 def set_color():
     is_random = False
+    is_Fuzzy = False
     database = redis.Redis(host='localhost', port=6379, db=0)
 
     list_of_colors = []
@@ -58,7 +61,7 @@ def set_color():
     if color_name == "options":
         response = MessagingResponse()
         response.message("\n***Options***\n-------------------------------\n"
-                         +"'Options' - list all options for Philips Light functions\n"+
+                         + "'Options' - list all options for Philips Light functions\n" +
                          "'Colors List' - link to list of color choices\n"
                          "'Random' - chooses a random color for the light")
         return str(response)
@@ -86,6 +89,13 @@ def set_color():
         database.hincrby('color_totals', 'random', 1)
         database.incr('total', 1)
     else:
+        if color_name not in list_of_colors:
+            # Checking to see if color is not in list_of_colors due to possible misspelling
+            fuzzy_Color = getFuzzyColor(color_name)
+            if fuzzy_Color is not None:
+                is_Fuzzy = True
+                color_name = clean_name(fuzzy_Color)
+
         if color_name in list_of_colors:
             database.hincrby('color_totals', color_name, 1)
             database.incr('total', 1)
@@ -107,6 +117,9 @@ def set_color():
         if is_random:
             message = "The light was changed to the color \"{}\". Random was used." \
                 .format(clean_name(color_name))
+        elif is_Fuzzy:
+            message = "We found a color similar to what you requested... The light was changed to the color \"{}\"".format(
+                clean_name(color_name))
         else:
             message = "The light was changed to the color \"{}\"." \
                 .format(clean_name(color_name))
@@ -123,7 +136,8 @@ def set_color():
     writeFile(file, str(phone_number), str(color_name), str(message))
     date = first_entry_date(file)
     response = MessagingResponse()
-    response.message(message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
+    response.message(
+        message + " This entry has been chosen {:.1f}".format(percent) + "% of the time since " + date + "!")
     logging.info("Color " + color_name + " has been set by the phone number " + phone_number + ".")
 
     return str(response)
