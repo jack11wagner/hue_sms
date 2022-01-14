@@ -2,26 +2,36 @@ from phue import PhueException
 from rgbxy import Converter
 from twilio.twiml.messaging_response import MessagingResponse
 from flask import Flask, request
-
 from getRedisColor import getColor
 from hue_controller import HueController
 from name_converter import clean_name
-from data_writer import writeFile,color_percent,mostRecentColors,numOfEachColor,invalidColors,first_entry_date
-import random
-import logging
-import redis
+from data_writer import writeFile, color_percent, mostRecentColors, numOfEachColor, invalidColors, first_entry_date
+import random, logging, redis
 from fuzzyColors import getFuzzyColor
+from PIL import ImageColor
 
-logging.basicConfig(level=logging.INFO,filename="hue_log.log",
-                    format="%(asctime)s:%(levelname)s:%(message)s"	)
+logging.basicConfig(level=logging.INFO, filename="hue_log.log",
+                    format="%(asctime)s:%(levelname)s:%(message)s")
 
 app = Flask(__name__)
 controller = HueController()
 file = "data.csv"
 
 
+def HEX_to_RGB(hexcode_color):
+    try:
+        r, g, b = ImageColor.getcolor(hexcode_color, 'RGB')
+        rgb_string = str(r) + ',' + str(g) + ',' + str(b)
+        return rgb_string
+    except ValueError:
+        return None
+
+
 def convert(rgb_values):
-    (r, g, b) = rgb_values.decode("utf-8").split(',')
+    if type(rgb_values) != str:
+        (r, g, b) = rgb_values.decode("utf-8").split(',')
+    else:
+        (r, g, b) = rgb_values.split(',')
     r = int(r)
     g = int(g)
     b = int(b)
@@ -38,20 +48,28 @@ def convert(rgb_values):
     return x, y, saturation_val
 
 
-@app.route('/', methods=['POST', 'GET'])
-def set_color():
-    is_random = False
-    is_Fuzzy = False
-    database = redis.Redis(host='localhost', port=6379, db=0)
-
+def get_colors_list_from_redis(database):
     list_of_colors = []
     for color in database.hgetall('color_totals').keys():
         color = color.decode('utf-8')
         list_of_colors.append(color)
+    return list_of_colors
+
+
+@app.route('/', methods=['POST', 'GET'])
+def set_color():
+    is_random = False
+    is_Fuzzy = False
+    is_Hex = False
+    database = redis.Redis(host='localhost', port=6379, db=0)
+
+    list_of_colors = get_colors_list_from_redis(database)
 
     phone_number = request.values.get('From', None)
-    color_name = request.values.get('Body', None)
-    color_name = clean_name(color_name)
+    unclean_color_name = request.values.get('Body', None)
+    if unclean_color_name.startswith("#"):
+        is_Hex = True
+    color_name = clean_name(unclean_color_name)
 
     if color_name == "black":
         response = MessagingResponse()
@@ -85,7 +103,6 @@ def set_color():
         color_sum = int(database.get('color_sum').decode('utf-8'), base=10)
         random_int = random.randint(1, color_sum)
         color_name = list_of_colors[random_int]
-
         database.hincrby('color_totals', 'random', 1)
         database.incr('total', 1)
     else:
@@ -100,7 +117,11 @@ def set_color():
             database.hincrby('color_totals', color_name, 1)
             database.incr('total', 1)
 
-    rgb_values = getColor(color_name)
+    if is_Hex:
+        rgb_values = HEX_to_RGB(unclean_color_name)
+
+    else:
+        rgb_values = getColor(color_name)
 
     if rgb_values is None:
         logging.info("Color " + color_name + " was not recognized")
@@ -120,6 +141,9 @@ def set_color():
         elif is_Fuzzy:
             message = "We found a color similar to what you requested... The light was changed to the color \"{}\"".format(
                 clean_name(color_name))
+        elif is_Hex:
+            message = "You requested a Hex Color... The light was changed to the Hex \"{}\"".format(
+                unclean_color_name)
         else:
             message = "The light was changed to the color \"{}\"." \
                 .format(clean_name(color_name))
@@ -131,6 +155,10 @@ def set_color():
 
     if is_random:
         color_name = 'random'
+    if is_Hex:
+        response = MessagingResponse()
+        response.message(message)
+        return str(response)
 
     percent = color_percent(color_name)
     writeFile(file, str(phone_number), str(color_name), str(message))
