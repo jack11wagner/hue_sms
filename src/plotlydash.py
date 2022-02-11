@@ -68,7 +68,7 @@ def setup():
             labels.append(key.title())
             sizes.append(color_totals_dict[key])
             colors.append(key.title())
-    fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=color_RGB_dict, width=1200, height=600)
+    fig = px.pie(names=labels, values=sizes, color=labels, color_discrete_map=color_RGB_dict, width=1650, height=800)
 
     df = pd.DataFrame(get_responsesDict('data.csv'))
 
@@ -83,25 +83,25 @@ def setup():
             align='left'
         ),
         cells=dict(
-            values=[df.Time, df['Last 4 Digits'], df.Color]
+            values=[df['Time'], df['Last 4 Digits'], df['Color']]
 
         ))
     ], layout=layout)
 
     app.layout = html.Div(children=[
         html.Div([
-            html.Div([html.H1(children='Moravian Color Choices'),
+            html.Div([html.H1(children='Moravian Color Choices', style = {'fontSize':64}),
 
                       html.Div(children='''
-            Text a color to the number 484-895-1386 and the light will change
-            ''', style={'color': 'black', 'fontSize': 22}
+            Text a color to the number 484-895-1386 or scan the QR Code and the light will change.
+            ''', style={'color': 'black', 'fontSize': 24}
                                ),
                       html.Div(children='''* Text 'options' for all hue light functions
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       html.Div(children='''* Text 'colors list' for all crayola colors
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       html.Div(children='''* Text 'random' for random color
-            ''', style={'color': 'black', 'fontSize': 18}),
+            ''', style={'color': 'black', 'fontSize': 22}),
                       dcc.Graph(
                           id='colors-graph',
                           figure=fig
@@ -169,7 +169,7 @@ def update_table_live(n):
             align='center'
         ),
         cells=dict(
-            values=[df.Time, df['Last 4 Digits'], df.Color],
+            values=[df['Time'], df['Last 4 Digits'], df['Color']],
             # change column cell height 30 for Monitors, default for Computer
             height = 30
         ))
