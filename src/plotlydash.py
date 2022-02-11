@@ -93,7 +93,7 @@ def setup():
             html.Div([html.H1(children='Moravian Color Choices'),
 
                       html.Div(children='''
-            Text a color to the number 857-320-3440 and the light will change
+            Text a color to the number 484-895-1386 and the light will change
             ''', style={'color': 'black', 'fontSize': 22}
                                ),
                       html.Div(children='''* Text 'options' for all hue light functions
