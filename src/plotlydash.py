@@ -7,6 +7,7 @@ from dash.dependencies import Input, Output
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objects as go
+from PIL import Image
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -92,7 +93,7 @@ def setup():
             html.Div([html.H1(children='Moravian Color Choices'),
 
                       html.Div(children='''
-            Text a color to the number 857-320-3440 and the light will change
+            Text a color to the number 484-895-1386 and the light will change
             ''', style={'color': 'black', 'fontSize': 22}
                                ),
                       html.Div(children='''* Text 'options' for all hue light functions
@@ -161,6 +162,7 @@ def update_graph_live(n):
               Input('table-interval', 'n_intervals'))
 def update_table_live(n):
     df = pd.DataFrame(get_responsesDict('data.csv'))
+    qr_image = Image.open("qr_code.jpg")
     table = go.Figure(data=[go.Table(
         header=dict(
             values=["Time", "Last 4 Digits", "Color"],
@@ -170,7 +172,6 @@ def update_table_live(n):
             values=[df.Time, df['Last 4 Digits'], df.Color],
             # change column cell height 30 for Monitors, default for Computer
             height = 30
-
         ))
     ])
     table.update_layout(title='Recent Color Choices', title_x =.5, title_y=.93,font=dict(
@@ -178,12 +179,20 @@ def update_table_live(n):
         size=15
     ), margin = dict(b=1))
     table.add_layout_image(
+    dict(
+        source="https://www.moravian.edu/themes/modern/dist/images/logo.svg",
+        x=.97, y=0.35,
+        sizex=0.58, sizey=0.4,
+        xanchor="right", yanchor="bottom",
+        layer='above'
+    ))
+    table.add_layout_image(
         dict(
-            source="https://www.moravian.edu/themes/modern/dist/images/logo.svg",
-            x=.75, y=0.3,
-            sizex=0.5, sizey=0.35,
+            source=qr_image,
+            x=.38, y=0.28,
+            sizex=0.4, sizey=0.3,
             xanchor="right", yanchor="bottom",
-            layer='below'
+            layer='above'
         )
     )
     return table
