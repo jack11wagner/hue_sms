@@ -72,9 +72,8 @@ def setup():
     df = pd.DataFrame(get_responsesDict('data.csv'))
 
     layout = go.Layout(
-        autosize=False,
-        width=1100,
-        height=1100,
+        width=1000,
+        height=1000,
     )
 
     table = go.Figure(data=[go.Table(
@@ -83,31 +82,29 @@ def setup():
             align='left'
         ),
         cells=dict(
-            values=[df['Time'], df['Last 4 Digits'], df['Color']]
+            values=[df.Time, df['Last 4 Digits'], df.Color]
 
         ))
     ], layout=layout)
 
     app.layout = html.Div(children=[
         html.Div([
-            html.Div([html.H1(children='Moravian Color Choices', style = {'fontSize': 64}),
+            html.Div([html.H1(children='Moravian Color Choices'),
 
                       html.Div(children='''
-            Text a color to the number 484-895-1386 and the light will change
+            Text a color to the number 857-320-3440 and the light will change
             ''', style={'color': 'black', 'fontSize': 22}
                                ),
                       html.Div(children='''* Text 'options' for all hue light functions
-            ''', style={'color': 'black', 'fontSize': 22}),
+            ''', style={'color': 'black', 'fontSize': 18}),
                       html.Div(children='''* Text 'colors list' for all crayola colors
-            ''', style={'color': 'black', 'fontSize': 22}),
+            ''', style={'color': 'black', 'fontSize': 18}),
                       html.Div(children='''* Text 'random' for random color
-            ''', style={'color': 'black', 'fontSize': 22}),
+            ''', style={'color': 'black', 'fontSize': 18}),
                       dcc.Graph(
                           id='colors-graph',
                           figure=fig
                       ),
-                      html.Div(children='''Text 484-895-1386 with your color! 
-                ''', style={'color': 'blue', 'fontSize': 35}),
                       dcc.Interval(
                           id='interval-component',
                           interval=1 * 1000,
@@ -124,20 +121,10 @@ def setup():
                     id='table-interval',
                     interval=1 * 1000,
                     n_intervals=0
-                ),
-                html.Img(
-                    src="https://www.moravian.edu/themes/modern/dist/images/logo.svg",
-                    height=100,
-                    style={'position': 'relative', 'top': '30px', 'left': '100px'}),
-                html.Footer(children='''Contributors: Andrew Carr ('19), Seth Coleman ('25), John Polich ('19), Jack Wagner ('23)
-                        ''', style={'position': 'relative', 'color': 'black', 'fontSize': 13, 'top': '150px'},
-                            dir='rtl'),
-            ],
-                className='five columns',
+                )
+            ], className='five columns'
             )
-        ],
-            className='row',
-        )])
+        ], className='row')])
 
 
 @app.callback(Output('colors-graph', 'figure'),
@@ -165,6 +152,7 @@ def update_graph_live(n):
 
     # change Font Size for PieChart/Legend
     fig.update_layout(font=dict(size=15))
+    fig.update_traces(textposition = 'inside', textinfo = 'percent')
 
     return fig
 
@@ -187,11 +175,20 @@ def update_table_live(n):
     ])
     table.update_layout(title='Recent Color Choices', title_x =.5, title_y=.93,font=dict(
         # change Font size for Table
-        size=15,
-    ))
+        size=15
+    ), margin = dict(b=1))
+    table.add_layout_image(
+        dict(
+            source="https://www.moravian.edu/themes/modern/dist/images/logo.svg",
+            x=.75, y=0.3,
+            sizex=0.5, sizey=0.35,
+            xanchor="right", yanchor="bottom",
+            layer='below'
+        )
+    )
     return table
 
 
 if __name__ == '__main__':
     setup()
-    app.run_server(debug=True, port=8000)
+    app.run_server(host ='0.0.0.0', port=8000)
