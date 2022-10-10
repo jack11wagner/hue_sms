@@ -16,3 +16,4 @@ def getFuzzyColor(color_name):
         return fuzz_color
     else:
         return None
+

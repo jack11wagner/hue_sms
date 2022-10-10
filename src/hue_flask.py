@@ -63,7 +63,7 @@ def set_color():
     is_random = False
     is_Fuzzy = False
     is_Hex = False
-    is_Rainbow = True
+    is_Rainbow = False
 
     database = redis.Redis(host='localhost', port=6379, db=0)
 
@@ -89,6 +89,7 @@ def set_color():
             response = MessagingResponse()
             response.message("Server unable to connect to the Hue Light")
             return str(response)
+
         light = controller.light
         light.transitiontime = transitionTime * 10
         light.brightness = 254
@@ -121,6 +122,7 @@ def set_color():
                          "'Colors List' - link to list of color choices\n"
                          "'Random' - chooses a random color for the light")
         return str(response)
+
     if color_name == "colors list":
         response = MessagingResponse()
         response.message(
