@@ -78,7 +78,7 @@ def set_color():
     if color_name == "rainbow":
         # Adds short rainbow sequence capability for a few seconds
         is_Rainbow = True
-        total_time = 5  # in seconds
+        total_time = 15  # in seconds
         transitionTime = .25  # in seconds
         maxHue = 65535
         hueIncrement = maxHue / total_time
