@@ -1,3 +1,5 @@
+import time
+
 from phue import PhueException
 from rgbxy import Converter
 from twilio.twiml.messaging_response import MessagingResponse
@@ -10,8 +12,8 @@ import random, logging, redis
 from fuzzyColors import getFuzzyColor
 from PIL import ImageColor
 
-logging.basicConfig(level=logging.INFO,filename="hue_log.log",
-                    format="%(asctime)s:%(levelname)s:%(message)s"	)
+logging.basicConfig(level=logging.INFO, filename="hue_log.log",
+                    format="%(asctime)s:%(levelname)s:%(message)s")
 
 app = Flask(__name__)
 controller = HueController()
@@ -61,6 +63,8 @@ def set_color():
     is_random = False
     is_Fuzzy = False
     is_Hex = False
+    is_Rainbow = True
+
     database = redis.Redis(host='localhost', port=6379, db=0)
 
     list_of_colors = get_colors_list_from_redis(database)
@@ -70,6 +74,40 @@ def set_color():
     if unclean_color_name.startswith("#"):
         is_Hex = True
     color_name = clean_name(unclean_color_name)
+
+    if color_name == "rainbow":
+        # Adds short rainbow sequence capability for a few seconds
+        is_Rainbow = True
+        total_time = 5  # in seconds
+        transitionTime = .25  # in seconds
+        maxHue = 65535
+        hueIncrement = maxHue / total_time
+        try:
+            controller.connect()
+        except PhueException:
+            logging.info("Server unable to connect to the Hue Light")
+            response = MessagingResponse()
+            response.message("Server unable to connect to the Hue Light")
+            return str(response)
+        light = controller.light
+        light.transitiontime = transitionTime * 10
+        light.brightness = 254
+        light.saturation = 254
+        # light.on = True # uncomment to turn all lights on
+
+        hue = 0
+        currTime = time.time()
+        elapsed_time = time.time() - currTime
+
+        while elapsed_time < total_time:
+            light.hue = hue
+            hue = (hue + hueIncrement) % maxHue
+            time.sleep(transitionTime)
+            elapsed_time = time.time() - currTime
+
+        response = MessagingResponse()
+        response.message("Did you enjoy the rainbow light show?")
+        return str(response)
 
     if color_name == "black":
         response = MessagingResponse()
@@ -135,6 +173,8 @@ def set_color():
         controller.light.xy = (x, y)
         controller.light.saturation = saturation_val
         logging.info("The light was changed to the color " + color_name)
+        if is_Rainbow:
+            message = "Did you enjoy the rainbow light show?"
         if is_random:
             message = "The light was changed to the color \"{}\". Random was used." \
                 .format(clean_name(color_name))
@@ -144,6 +184,7 @@ def set_color():
         elif is_Hex:
             message = "You requested a Hex Color... The light was changed to the Hex \"{}\"".format(
                 unclean_color_name)
+
         else:
             message = "The light was changed to the color \"{}\"." \
                 .format(clean_name(color_name))
