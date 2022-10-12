@@ -106,7 +106,7 @@ def set_color():
             elapsed_time = time.time() - currTime
 
         response = MessagingResponse()
-        response.message("Did you enjoy the rainbow light show?")
+        response.message("How was the rainbow light show?")
         return str(response)
 
     if color_name == "black":
@@ -175,7 +175,7 @@ def set_color():
         controller.light.saturation = saturation_val
         logging.info("The light was changed to the color " + color_name)
         if is_Rainbow:
-            message = "Did you enjoy the rainbow light show?"
+            message = "How was the rainbow light show?"
         if is_random:
             message = "The light was changed to the color \"{}\". Random was used." \
                 .format(clean_name(color_name))
