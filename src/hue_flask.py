@@ -1,5 +1,4 @@
 import time
-
 from phue import PhueException
 from rgbxy import Converter
 from twilio.twiml.messaging_response import MessagingResponse
