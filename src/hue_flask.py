@@ -99,7 +99,6 @@ def set_color():
         hue = 0
         currTime = time.time()
         elapsed_time = time.time() - currTime
-
         while elapsed_time < total_time:
             light.hue = hue
             hue = (hue + hueIncrement) % maxHue
